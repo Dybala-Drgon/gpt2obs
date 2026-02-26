@@ -8,7 +8,6 @@ const elements = {
   apiKey: document.getElementById('apiKey'),
   toggleApiKey: document.getElementById('toggleApiKey'),
   vaultPath: document.getElementById('vaultPath'),
-  selectFolder: document.getElementById('selectFolder'),
   subfolder: document.getElementById('subfolder'),
   saveConfig: document.getElementById('saveConfig'),
   testApi: document.getElementById('testApi'),
@@ -52,11 +51,6 @@ function bindEvents() {
   elements.testApi.addEventListener('click', async () => {
     await testApiConnection();
   });
-
-  // 选择文件夹
-  elements.selectFolder.addEventListener('click', async () => {
-    await selectFolder();
-  });
 }
 
 // 加载配置
@@ -68,13 +62,15 @@ async function loadConfig() {
       const config = response.config;
 
       elements.apiKey.value = config.apiKey || '';
-      elements.vaultPath.value = config.vaultPath || '';
       elements.subfolder.value = config.subfolder || 'ChatGPT_Summary';
 
-      // 如果有保存的文件夹名称，显示它
+      // 检查是否已设置文件夹
       const result = await chrome.storage.local.get(['vaultFolderName']);
-      if (result.vaultFolderName && !elements.vaultPath.value) {
-        elements.vaultPath.value = `📁 ${result.vaultFolderName} (已选择)`;
+
+      if (result.vaultFolderName) {
+        elements.vaultPath.value = `📁 ${result.vaultFolderName} (已记住)`;
+      } else {
+        elements.vaultPath.value = '首次保存时选择';
       }
 
       console.log('[GPT2Obsidian] Config loaded');
@@ -90,7 +86,6 @@ async function saveConfig() {
   try {
     const config = {
       apiKey: elements.apiKey.value.trim(),
-      vaultPath: elements.vaultPath.value.trim(),
       subfolder: elements.subfolder.value.trim() || 'ChatGPT_Summary'
     };
 
@@ -154,54 +149,6 @@ async function testApiConnection() {
   } finally {
     elements.testApi.textContent = '🧪 测试API连接';
     elements.testApi.disabled = false;
-  }
-}
-
-// 选择文件夹
-async function selectFolder() {
-  try {
-    // 检查浏览器支持
-    if (!('showDirectoryPicker' in window)) {
-      showNotification('❌ 您的浏览器不支持文件夹选择功能', 'error');
-      return;
-    }
-
-    // 打开文件夹选择器
-    const dirHandle = await window.showDirectoryPicker({
-      mode: 'readwrite',
-      startIn: 'downloads'
-    });
-
-    // 获取文件夹路径（注意：由于安全限制，无法获取完整路径）
-    const folderName = dirHandle.name;
-
-    // 显示路径
-    elements.vaultPath.value = `📁 ${folderName} (已选择)`;
-
-    // 保存handle到chrome.storage（注意：popup关闭后handle会失效）
-    await chrome.storage.local.set({
-      vaultFolderName: folderName,
-      vaultPath: `📁 ${folderName} (已选择)`
-    });
-
-    showNotification(`✅ 已选择文件夹: ${folderName}`, 'success');
-
-    console.log('[GPT2Obsidian] Folder selected:', folderName);
-
-    // 显示提示信息
-    setTimeout(() => {
-      showNotification('⚠️ 文件将保存到下载文件夹，请手动移动到Obsidian', 'info');
-    }, 2000);
-
-  } catch (error) {
-    // 用户取消选择
-    if (error.name === 'AbortError') {
-      console.log('[GPT2Obsidian] Folder selection cancelled');
-      return;
-    }
-
-    console.error('[GPT2Obsidian] Select folder error:', error);
-    showNotification('❌ 选择文件夹失败: ' + error.message, 'error');
   }
 }
 

@@ -211,31 +211,71 @@ function generateFilename(title, timestamp) {
   return `${date}_${safeTitle}.md`;
 }
 
-// 保存到Obsidian（使用chrome.downloads API）
+// 保存到Obsidian（使用 File System Access API）
+// 注意：由于 Service Worker 无法访问 File System Access API
+// 需要在 content script 中处理文件写入
 async function saveToObsidian(content, filename, config) {
   try {
-    // 将内容转换为Data URL（Service Worker中不能用createObjectURL）
+    // 将内容转换为 Data URL（Service Worker 中不能用 createObjectURL）
     const dataUrl = `data:text/markdown;charset=utf-8,${encodeURIComponent(content)}`;
 
     const downloadId = await chrome.downloads.download({
       url: dataUrl,
-      filename: `gpt2obs/${filename}`,  // 保存到gpt2obs子文件夹
+      filename: `gpt2obs/${filename}`,
       saveAs: false
     });
 
     console.log('[GPT2Obsidian] Download started:', downloadId);
 
-    // 返回保存路径
     return `Downloads/gpt2obs/${filename}`;
 
   } catch (error) {
     console.error('[GPT2Obsidian] Save to Obsidian error:', error);
 
-    // 备用方案：保存到chrome.storage，让用户手动复制
+    // 备用方案：保存到 chrome.storage，让用户手动复制
     await saveToStorageAsBackup(content, filename);
 
     throw new Error('文件保存失败: ' + error.message);
   }
+}
+
+// 直接保存到指定文件夹（使用 File System Access API）
+// 这个函数会在 content script 中调用
+async function saveFileWithFileSystemAPI(content, filename, directoryHandle) {
+  try {
+    // 获取子文件夹（如果配置了）
+    let targetDir = directoryHandle;
+    const subfolder = await getSubfolderConfig();
+
+    if (subfolder) {
+      try {
+        targetDir = await directoryHandle.getDirectoryHandle(subfolder, { create: true });
+      } catch (e) {
+        console.warn('[GPT2Obsidian] Cannot access subfolder, using root:', e);
+      }
+    }
+
+    // 创建文件
+    const fileHandle = await targetDir.getFileHandle(filename, { create: true });
+
+    // 写入内容
+    const writable = await fileHandle.createWritable();
+    await writable.write(content);
+    await writable.close();
+
+    console.log('[GPT2Obsidian] File saved successfully:', filename);
+    return { success: true, filename };
+
+  } catch (error) {
+    console.error('[GPT2Obsidian] FileSystem API save error:', error);
+    throw error;
+  }
+}
+
+// 获取子文件夹配置
+async function getSubfolderConfig() {
+  const result = await chrome.storage.local.get(['subfolder']);
+  return result.subfolder || 'ChatGPT_Summary';
 }
 
 // 备用保存方案（保存到storage）
