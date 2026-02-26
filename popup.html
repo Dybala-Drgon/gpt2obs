@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPT to Obsidian 设置</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 头部 -->
+    <header class="header">
+      <h1>💬 GPT to Obsidian</h1>
+      <p class="subtitle">将ChatGPT对话自动保存到Obsidian</p>
+    </header>
+
+    <!-- API配置 -->
+    <section class="section">
+      <h2>🔑 API 配置</h2>
+      <div class="form-group">
+        <label for="apiKey">GLM-4.7 API Key</label>
+        <input type="password" id="apiKey" placeholder="输入你的智谱AI API Key" />
+        <button class="btn-link" id="toggleApiKey">显示</button>
+        <p class="help-text">
+          <a href="https://open.bigmodel.cn/" target="_blank">获取API Key</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- Obsidian配置 -->
+    <section class="section">
+      <h2>📁 Obsidian 配置</h2>
+      <div class="form-group">
+        <label for="vaultPath">保存位置</label>
+        <div class="input-group">
+          <input type="text" id="vaultPath" placeholder="文件将保存到下载文件夹" readonly />
+          <button class="btn-secondary" id="selectFolder">选择文件夹</button>
+        </div>
+        <p class="help-text">
+          💡 由于浏览器限制，文件将保存到下载文件夹的 gpt2obs 目录
+        </p>
+      </div>
+      <div class="form-group">
+        <label for="subfolder">子文件夹名称</label>
+        <input type="text" id="subfolder" value="ChatGPT_Summary" placeholder="子文件夹名称" />
+      </div>
+    </section>
+
+    <!-- 操作按钮 -->
+    <section class="section actions">
+      <button class="btn-primary" id="saveConfig">💾 保存配置</button>
+      <button class="btn-secondary" id="testApi">🧪 测试API连接</button>
+    </section>
+
+    <!-- 历史记录 -->
+    <section class="section" id="historySection">
+      <h2>📜 最近保存</h2>
+      <div id="historyList" class="history-list">
+        <p class="empty-text">暂无历史记录</p>
+      </div>
+    </section>
+
+    <!-- 状态提示 -->
+    <div id="notification" class="notification hidden"></div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>版本 1.0.0 | <a href="https://github.com" target="_blank">GitHub</a></p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

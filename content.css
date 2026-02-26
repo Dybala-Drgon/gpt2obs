@@ -1,0 +1,19 @@
+/*
+ * GPT to Obsidian - Content Script Styles
+ * 注入到ChatGPT页面的样式
+ */
+
+/* 保存按钮样式（已在content.js中内联定义，这里保留作为备用） */
+#gpt2obs-save-btn {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 99999 !important;
+}
+
+/* 确保按钮在所有情况下都可见 */
+#gpt2obs-save-btn * {
+  pointer-events: auto !important;
+}
+
+/* 通知样式（已在content.js中内联定义） */

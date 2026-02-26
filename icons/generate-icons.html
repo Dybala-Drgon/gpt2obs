@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图标生成器 - GPT to Obsidian</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #10a37f;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .icon-preview {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+    .icon-item {
+      text-align: center;
+    }
+    .icon-item canvas {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      margin: 10px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .icon-item p {
+      font-weight: 500;
+      color: #333;
+    }
+    .button-group {
+      text-align: center;
+      margin-top: 30px;
+    }
+    button {
+      background: #10a37f;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #0d8c6c;
+    }
+    .hidden {
+      display: none;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .instructions {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 30px;
+      border-left: 4px solid #10a37f;
+    }
+    .instructions h3 {
+      margin-top: 0;
+      color: #10a37f;
+    }
+    .instructions ol {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    .instructions li {
+      margin: 8px 0;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💬 GPT to Obsidian 图标生成器</h1>
+    <p class="subtitle">一键生成所有需要的图标尺寸</p>
+
+    <div class="icon-preview" id="preview">
+      <!-- 图标将在这里显示 -->
+    </div>
+
+    <div class="button-group">
+      <button onclick="generateAndDownload()">🎨 生成并下载所有图标</button>
+    </div>
+
+    <div id="success" class="success hidden">
+      ✅ 图标已生成并自动下载！
+    </div>
+
+    <div class="instructions">
+      <h3>📋 使用说明</h3>
+      <ol>
+        <li>点击上面的「生成并下载所有图标」按钮</li>
+        <li>浏览器会自动下载 3 个PNG文件：
+          <ul>
+            <li><code>icon16.png</code> - 16×16 像素</li>
+            <li><code>icon48.png</code> - 48×48 像素</li>
+            <li><code>icon128.png</code> - 128×128 像素</li>
+          </ul>
+        </li>
+        <li>将这些文件移动到 <code>icons/</code> 目录</li>
+        <li>重新加载Chrome扩展即可看到新图标</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    // SVG图标源代码
+    const svgSource = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+      <rect width="128" height="128" rx="24" fill="#10a37f"/>
+      <g transform="translate(24, 24)">
+        <rect x="0" y="0" width="64" height="48" rx="12" fill="white"/>
+        <rect x="40" y="28" width="40" height="32" rx="10" fill="white" opacity="0.9"/>
+        <rect x="12" y="14" width="32" height="4" rx="2" fill="#10a37f" opacity="0.6"/>
+        <rect x="12" y="22" width="24" height="4" rx="2" fill="#10a37f" opacity="0.6"/>
+        <rect x="12" y="30" width="28" height="4" rx="2" fill="#10a37f" opacity="0.6"/>
+        <rect x="50" y="38" width="20" height="3" rx="1.5" fill="#10a37f" opacity="0.5"/>
+        <rect x="50" y="44" width="16" height="3" rx="1.5" fill="#10a37f" opacity="0.5"/>
+        <rect x="50" y="50" width="18" height="3" rx="1.5" fill="#10a37f" opacity="0.5"/>
+      </g>
+      <g transform="translate(82, 82)">
+        <rect x="0" y="0" width="32" height="32" rx="8" fill="white" opacity="0.95"/>
+        <rect x="8" y="6" width="16" height="20" rx="2" fill="none" stroke="#10a37f" stroke-width="2"/>
+        <rect x="10" y="8" width="12" height="8" fill="#10a37f" opacity="0.7"/>
+        <rect x="12" y="18" width="8" height="6" fill="#10a37f" opacity="0.5"/>
+      </g>
+    </svg>`;
+
+    const sizes = [16, 48, 128];
+
+    // 初始化预览
+    function initPreview() {
+      const preview = document.getElementById('preview');
+
+      sizes.forEach(size => {
+        const div = document.createElement('div');
+        div.className = 'icon-item';
+
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.id = `canvas-${size}`;
+
+        const label = document.createElement('p');
+        label.textContent = `${size}×${size}`;
+
+        div.appendChild(canvas);
+        div.appendChild(label);
+        preview.appendChild(div);
+
+        // 绘制预览
+        drawIcon(canvas, size);
+      });
+    }
+
+    // 绘制图标到canvas
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      const svgBlob = new Blob([svgSource], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0, size, size);
+        URL.revokeObjectURL(url);
+      };
+
+      img.src = url;
+    }
+
+    // 生成并下载所有图标
+    function generateAndDownload() {
+      sizes.forEach(size => {
+        const canvas = document.getElementById(`canvas-${size}`);
+
+        // 等待canvas绘制完成
+        setTimeout(() => {
+          canvas.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `icon${size}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 'image/png');
+        }, 100);
+      });
+
+      // 显示成功消息
+      setTimeout(() => {
+        document.getElementById('success').classList.remove('hidden');
+      }, 500);
+    }
+
+    // 页面加载时初始化
+    window.onload = initPreview;
+  </script>
+</body>
+</html>
